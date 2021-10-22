@@ -88,34 +88,36 @@ function renderCircles(circlesGroup, newXScale, chosenXAxis, newYScale, chosenYA
 }
 
 // function used for updating circles group with new tooltip
-function updateToolTip(chosenXAxis, ChosenYAxis, circlesGroup) {
+function updateToolTip(chosenXAxis, chosenYAxis, circlesGroup) {
 
-  var label;
+  var xlabel;
 
   if (chosenXAxis === "poverty") {
-    label = "In Poverty (%)";
+    xlabel = "In Poverty (%)";
   }
   if (chosenXAxis === "age") {
-    label = "Age (Median)";
+    xlabel = "Age (Median)";
   }
   if (chosenXAxis === "income") {
-    label = "Household Income (Median)";
+    xlabel = "Household Income (Median)";
   }
 
+  var ylabel;
+
   if (chosenYAxis === "healthcareLow") {
-    label = "Lacks Healthcare (%)";
+    ylabel = "Lacks Healthcare (%)";
   }
   if (chosenYAxis === "smokes") {
-    label = "Smokes (%)";
+    ylabel = "Smokes (%)";
   }
   if (chosenYAxis === "obesity") {
-    label = "Obesity (%)";
+    ylabel = "Obesity (%)";
   }
   var toolTip = d3.tip()
     .attr("class", "tooltip")
-    .offset([80, -60])
+    .offset([chosenXAxis, chosenYAxis])
     .html(function(d) {
-      return (`${d.state}<br>${label} ${d[chosenXAxis]}`);
+      return (`${d.state}<br>${xlabel} ${d[chosenXAxis]}<br>${ylabel} ${d[chosenYAxis]}`);
     });
 
   circlesGroup.call(toolTip);
@@ -225,7 +227,7 @@ d3.csv("assets/data/data.csv").then(function(data, err) {
     .text("Household Income (Median)");
 
   // Create group for three y-axis labels
-  var HeathcareLowLabel = chartGroup.append("text")
+  var healthcareLowLabel = chartGroup.append("text")
     .attr("transform", "rotate(-90)")
     .attr("y", 1 - margin.left+15)
     .attr("x", 0 - (height / 1.5))
@@ -253,7 +255,7 @@ d3.csv("assets/data/data.csv").then(function(data, err) {
     .text("Obesity (%)");
 
   // updateToolTip function above csv import
-  var circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
+  var circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup, circleLabels);
 
   // x axis labels event listener
   labelsGroup.selectAll("text")
@@ -275,10 +277,10 @@ d3.csv("assets/data/data.csv").then(function(data, err) {
         xAxis = renderAxes(xLinearScale, xAxis);
 
         // updates circles with new x values
-        circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis);
+        circlesGroup = renderCircles(circlesGroup, xLinearScale, chosenXAxis, yLinearScale, chosenYAxis,);
 
         // updates tooltips with new info
-        circlesGroup = updateToolTip(chosenXAxis, circlesGroup);
+        circlesGroup = updateToolTip(chosenXAxis, chosenYAxis, circlesGroup);
 
         // changes classes to change bold text
         if (chosenXAxis === "poverty") {
@@ -317,25 +319,31 @@ d3.csv("assets/data/data.csv").then(function(data, err) {
             .classed("inactive", true);
         }
       }
-      if (value !== chosenYAxis) {
+    });
+       // x axis labels event listener
+    labelsYGroup.selectAll("text-axis")
+      .on("click", function() {
+    // get value of selection
+      var yValue = d3.select(this).attr("value");
+      if (yValue !== chosenYAxis) {
 
-        // replaces chosenXAxis with value
-        chosenYAxis = value;
+        // replaces chosenYAxis with value
+        chosenYAxis = yValue;
 
-        // console.log(chosenXAxis)
+        console.log(chosenYAxis)
 
         // functions here found above csv import
-        // updates x scale for new data
+        // updates y scale for new data
         yLinearScale = yScale(data, chosenYAxis);
 
-        // updates x axis with transition
-        yAxis = renderAxes(yLinearScale, yAxis);
+        // updates y axis with transition
+        yAxis = renderYAxes(yLinearScale, yAxis);
 
-        // updates circles with new x values
-        circlesGroup = renderYCircles(circlesGroup, yLinearScale, chosenYAxis);
+        // updates circles with new y values
+        circlesYGroup = renderYCircles(circlesGroup, yLinearScale, chosenYAxis);
 
         // updates tooltips with new info
-        circlesGroup = updateToolTip(chosenYAxis, circlesGroup);
+        circlesYGroup = updateToolTip(chosenYAxis, circlesYGroup);
 
         // changes classes to change bold text
         if (chosenYAxis === "healthcareLow") {
@@ -374,6 +382,7 @@ d3.csv("assets/data/data.csv").then(function(data, err) {
             .classed("inactive", true);
         }
       }
+    
     });
 }).catch(function(error) {
   console.log(error);
